@@ -31,7 +31,10 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
         for (int lig = 0; lig < Coordonnees.NB_LIGNES; lig++) {
             for (int col = 0; col < Coordonnees.NB_COLONNES; col++) {
                 Coordonnees coord = new Coordonnees(lig, col);
-                ajoutActionPlanter(coord, actions, vitalites, couleurJoueur);
+                Case laCase = plateau[lig][col];
+                if (!laCase.plantePresente()) {
+                    ajoutActionPlanter(coord, actions, vitalites, couleurJoueur);
+                }
             }
         }
         System.out.println("actionsPossibles : fin");
@@ -39,30 +42,55 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
     }
 
     /**
-     * Somme des vitalités des plantes de chaque joueur sur le plateau.
+     * Méthode de classe qui renvoie la somme des vitalités des plantes de
+     * chaque joueur sur le plateau.
      *
      * @param plateau le plateau
      * @return la somme des vitalités des plantes de chaque joueur
      */
     static Vitalites vitalitesPlateau(Case[][] plateau) {
-        // TODO il y en aura besoin à un moment !
-        return new Vitalites(0, 0);
+        int vitaliteRouge = 0;
+        int vitaliteBleu = 0;
+        // on parcourt le plateau dans son entièreté
+        for (Case[] plateau1 : plateau) {
+            for (Case laCase : plateau1) {
+                // vérifie la présence d'une plante & de la couleur et indique la vitalité
+                if (laCase.plantePresente() == true) {
+                    if (laCase.couleur == 'R') {
+                        vitaliteRouge += laCase.vitalite;
+                    } else if (laCase.couleur == 'B') {
+                        vitaliteBleu += laCase.vitalite;
+                    }
+                }
+            }
+        }
+        return new Vitalites(vitaliteRouge, vitaliteBleu);
     }
 
     /**
-     * Ajout d'une action de plantation de pommier dans l'ensemble des actions
-     * possibles.
+     * Méthode d'instance qui ajoute une action de plantation de pommier dans
+     * l'ensemble des actions possibles.
      *
      * @param coord coordonnées de la case où planter le pommier
      * @param actions l'ensemble des actions possibles (en construction)
-     * @param vitalites la somme des vitalités sur le plateau avant de jouer l'action
+     * @param vitalites la somme des vitalités sur le plateau avant de jouer
+     * l'action
      * @param couleur la couleur du pommier à ajouter
      */
     void ajoutActionPlanter(Coordonnees coord, ActionsPossibles actions,
             Vitalites vitalites, char couleur) {
-        String action = "P" + coord.carLigne() + coord.carColonne() + "," 
-                + (vitalites.vitalitesRouge + 1) + ","
-                + (vitalites.vitalitesBleu);
+        // on modifie les vitalités
+        int vitalitesRouge = vitalites.vitalitesRouge;
+        int vitalitesBleu = vitalites.vitalitesBleu;
+        if (couleur == 'R') {
+            vitalitesRouge++;
+        } else if (couleur == 'B') {
+            vitalitesBleu++;
+        }
+        // ajout de l'action planter
+        String action = "P" + coord.carLigne() + coord.carColonne() + ","
+                + (vitalitesRouge) + ","
+                + (vitalitesBleu);
         actions.ajouterAction(action);
     }
 }
