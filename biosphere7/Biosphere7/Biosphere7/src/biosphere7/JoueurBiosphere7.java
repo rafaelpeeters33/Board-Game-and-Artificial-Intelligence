@@ -92,18 +92,19 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
     }
 
     /**
-     * Méthode d'instance qui ajoute une action de plantation de pommier dans
+     * Méthode d'instance qui ajoute une action de plantation de plante dans
      * l'ensemble des actions possibles.
      *
-     * @param coord coordonnées de la case où planter le pommier
+     * @param coord coordonnées de la case où planter la plante
      * @param actions l'ensemble des actions possibles (en construction)
      * @param vitalites la somme des vitalités sur le plateau avant de jouer
      * l'action
      * @param couleur la couleur du pommier à ajouter
+     * @param plateau le plateau considéré
      */
     void ajoutActionPlanter(Coordonnees coord, ActionsPossibles actions,
             Vitalites vitalites, char couleur, Case[][] plateau) {
-        int nbVoisins = calculNombreVoisins(coord, plateau);
+        int nbVoisins = calculNombreVoisins(coord, couleur, plateau);
         // on modifie les vitalités
         int vitalitesRouge = vitalites.vitalitesRouge;
         int vitalitesBleu = vitalites.vitalitesBleu;
@@ -128,6 +129,7 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
      * @param vitalites la somme des vitalités sur le plateau avant de jouer
      * l'action
      * @param laCase la case considérée
+     * @param plateau le plateau considéré
      */
     void ajoutActionCouper(Coordonnees coord, ActionsPossibles actions,
             Vitalites vitalites, Case laCase, Case[][] plateau) {
@@ -190,13 +192,14 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
 
     /**
      * Méthode de classe qui calcule le nombre de cases voisines ayant une
-     * plante.
+     * plante, selon la couleur.
      *
      * @param coord coordonnées de la case considérée
+     * @param couleur la couleur de la plante ajoutée
      * @param plateau le plateau considéré
      * @return un entier désignant le nombre de voisins avec une plante
      */
-    static int calculNombreVoisins(Coordonnees coord, Case[][] plateau) {
+    static int calculNombreVoisins(Coordonnees coord, char couleur, Case[][] plateau) {
         int nbVoisins = 0;
         Coordonnees[] voisins = coordonneesVoisines(coord);
         // on parcourt les voisins
@@ -209,7 +212,9 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
                 Case caseVoisine = plateau[lig][col];
                 // on calcule le nombre de voisins
                 if (caseVoisine.plantePresente()) {
-                    nbVoisins++;
+                    if (caseVoisine.couleur == couleur) {
+                        nbVoisins++;
+                    }
                 }
             }
         }
