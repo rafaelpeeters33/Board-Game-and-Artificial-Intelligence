@@ -18,7 +18,9 @@ public class JoueurBiosphere7Test {
         //testActionsPossibles_niveau1();
         //testActionsPossibles_niveau2();
         //testActionsPossibles_niveau3();
-        testActionsPossibles_niveau4();
+        //testActionsPossibles_niveau4();
+        testActionsPossibles_niveau5();
+        
     }
 
     /**
@@ -145,6 +147,35 @@ public class JoueurBiosphere7Test {
     }
 
     /**
+     * Test de la méthode actionsPossibles, au niveau 5.
+     */
+    public void testActionsPossibles_niveau5() {
+        JoueurBiosphere7 joueur = new JoueurBiosphere7();
+        // plateau, couleur et niveau
+        Case[][] plateau = Utils.plateauDepuisTexte(PLATEAU_NIVEAU5);
+        char couleur = 'B';
+        int niveau = 5;
+        // on lance actionsPossibles
+        String[] actionsPossiblesDepuisPlateau
+                = joueur.actionsPossibles(plateau, couleur, niveau);
+        ActionsPossibles actionsPossibles
+                = new ActionsPossibles(actionsPossiblesDepuisPlateau);
+        // on peut planter sur une case quelconque vide
+        assertTrue(actionsPossibles.contient("PdH,16,22"));
+        // on ne peut pas planter sur une case occupée 
+        assertFalse(actionsPossibles.contient("PeG,16,19"));
+        // on peut couper une plante Rouge en aG 
+        assertTrue(actionsPossibles.contient("CaG,16,18"));
+        // on peut couper une plante Bleue en cE 
+        assertTrue(actionsPossibles.contient("CkC,16,18"));
+        // on ne peut pas couper une case vide 
+        assertFalse(actionsPossibles.contient("CeJ,16,18"));
+        // vérifions s'il y a le bon nombre d'actions possibles 
+        assertEquals(Coordonnees.NB_LIGNES * Coordonnees.NB_COLONNES,
+                actionsPossiblesDepuisPlateau.length);
+    }
+
+    /**
      * Test de la méthode vitalitesPlateau.
      */
     @Test
@@ -197,12 +228,13 @@ public class JoueurBiosphere7Test {
     public void testAjoutActionPlanter() {
         JoueurBiosphere7 joueur = new JoueurBiosphere7();
         ActionsPossibles actions = new ActionsPossibles();
+        Case[][] plateau = Utils.plateauDepuisTexte(PLATEAU_NIVEAU2);
         Vitalites vitalites = new Vitalites(0, 0);
         // pour l'instant pas d'action possible
         assertEquals(0, actions.nbActions);
         // on crée le tableau d'actions et on en ajoute une
         joueur.ajoutActionPlanter(Coordonnees.depuisCars('f', 'D'), actions,
-                vitalites, Case.CAR_ROUGE);
+                vitalites, Case.CAR_ROUGE, plateau);
         // l'action est devenue possible
         assertTrue(actions.contient("PfD,1,0"));
         // une action possible mais qui n'a pas encore été ajoutée
@@ -211,7 +243,7 @@ public class JoueurBiosphere7Test {
         assertEquals(1, actions.nbActions);
         // ajout d'une deuxième action possible
         joueur.ajoutActionPlanter(Coordonnees.depuisCars('b', 'H'), actions,
-                vitalites, Case.CAR_ROUGE);
+                vitalites, Case.CAR_ROUGE, plateau);
         // l'action a bien été ajoutée
         assertTrue(actions.contient("PbH,1,0"));
         // désormais, deux actions possibles
@@ -271,6 +303,27 @@ public class JoueurBiosphere7Test {
         assertEquals(0, boostBordHorizontal.vitalitesRouge);
         assertEquals(2, boostBordHorizontal.vitalitesBleu);
     }
+
+    /**
+     * Test de la méthode calculNombreVoisins.
+     */
+    @Test
+    public void testCalculNombreVoisins() {
+        Case[][] plateau = Utils.plateauDepuisTexte(PLATEAU_NIVEAU5);
+        // cas 1 : 3 voisins
+        Coordonnees coordCentreSymbiose = Coordonnees.depuisCars('d', 'H');
+        int voisinsCentre = JoueurBiosphere7.calculNombreVoisins(coordCentreSymbiose, plateau);
+        assertEquals(3, voisinsCentre);
+        // cas 2 : pas de voisins 
+        Coordonnees coordBord = Coordonnees.depuisCars('f', 'A');
+        int voisinsBord = JoueurBiosphere7.calculNombreVoisins(coordBord, plateau);
+        assertEquals(0, voisinsBord);
+        // cas 3 : 2 voisins
+        Coordonnees coordPlante = Coordonnees.depuisCars('a', 'H');
+        int voisinsPlante = JoueurBiosphere7.calculNombreVoisins(coordPlante, plateau);
+        assertEquals(2, voisinsPlante);
+    }
+
     /**
      * Un plateau de base, sous forme de chaîne.
      */
@@ -418,4 +471,41 @@ public class JoueurBiosphere7Test {
               n|   |   |   |   |   |   |   |   |   |PR1|PR1|   |   |PR1|
                +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
               """;
+
+    /**
+     * Un plateau pour tester le niveau 5.
+     */
+    final String PLATEAU_NIVEAU5
+            = """
+               A   B   C   D   E   F   G   H   I   J   K   L   M   N 
+             +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+            a|   |   |   |   |   |   |PR1|PR2|PB2|   |   |   |   |   |
+             +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+            b|   |   |   |   |   |   |   |   |   |   |PR1|   |   |   |
+             +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+            c|   |PR1|   |   |PB1|   |   |PB1|   |   |   |   |PR1|   |
+             +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+            d|   |   |   |PR1|   |   |PB1|   |PB1|   |   |PB1|   |   |
+             +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+            e|   |   |   |   |   |   |PR2|   |   |   |   |   |   |   |
+             +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+            f|   |   |   |   |   |   |   |   |   |   |   |   |   |PR1|
+             +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+            g|   |   |   |   |   |   |PB1|   |PR1|   |PR1|PB2|   |   |
+             +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+            h|   |   |   |   |   |   |PB2|   |   |PB2|   |   |   |   |
+             +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+            i|   |   |   |   |   |   |   |   |   |PR1|   |   |   |   |
+             +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+            j|   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+             +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+            k|   |PB2|PB1|   |PR1|   |   |   |PR1|   |   |   |   |   |
+             +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+            l|   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+             +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+            m|   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+             +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+            n|   |   |PB1|   |PR1|   |   |   |   |   |   |   |   |   |
+             +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             """;
 }
