@@ -33,7 +33,7 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
                 Coordonnees coord = new Coordonnees(lig, col);
                 Case laCase = plateau[lig][col];
                 if (!laCase.plantePresente()) {
-                    ajoutActionPlanter(coord, actions, vitalites, couleurJoueur);
+                    ajoutActionPlanter(coord, actions, vitalites, couleurJoueur, plateau);
                 } else if (laCase.plantePresente()) {
                     ajoutActionCouper(coord, actions, vitalites, laCase, plateau);
                 }
@@ -102,14 +102,15 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
      * @param couleur la couleur du pommier à ajouter
      */
     void ajoutActionPlanter(Coordonnees coord, ActionsPossibles actions,
-            Vitalites vitalites, char couleur) {
+            Vitalites vitalites, char couleur, Case[][] plateau) {
+        int nbVoisins = calculNombreVoisins(coord, plateau);
         // on modifie les vitalités
         int vitalitesRouge = vitalites.vitalitesRouge;
         int vitalitesBleu = vitalites.vitalitesBleu;
         if (couleur == 'R') {
-            vitalitesRouge++;
+            vitalitesRouge += 1 + nbVoisins;
         } else if (couleur == 'B') {
-            vitalitesBleu++;
+            vitalitesBleu += 1 + nbVoisins;
         }
         // ajout de l'action planter
         String action = "P" + coord.carLigne() + coord.carColonne() + ","
@@ -148,7 +149,33 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
                 + (vitalitesBleu);
         actions.ajouterAction(action);
     }
-
+    
+    /**
+     * Méthode de classe qui calcule le nombre de cases voisines ayant une plante.
+     *
+     * @param coord coordonnées de la case considérée
+     * @param plateau le plateau considéré
+     * @return un entier désignant le nombre de voisins avec une plante
+     */
+    static int calculNombreVoisins(Coordonnees coord, Case[][] plateau) { 
+        int nbVoisins = 0; 
+        Coordonnees[] voisins = coordonneesVoisines(coord);
+        // on parcourt les voisins
+        for (Coordonnees coordVoisin : voisins) {
+            int lig = coordVoisin.ligne;
+            int col = coordVoisin.colonne;
+            // on vérifie que la coordonnée est dans les limites du plateau
+            if (lig >= 0 && lig < Coordonnees.NB_LIGNES
+                    && col >= 0 && col < Coordonnees.NB_COLONNES) {
+                Case caseVoisine = plateau[lig][col];
+                // on calcule le nombre de voisins
+                if (caseVoisine.plantePresente()) {
+                    nbVoisins++;
+                }
+            }
+        }
+        return nbVoisins;
+    }
     /**
      * Méthode de classe qui calcule l'impact du boost de coupe sur les 4
      * voisins d'une case.
