@@ -35,7 +35,7 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
                 if (!laCase.plantePresente()) {
                     ajoutActionPlanter(coord, actions, vitalites, couleurJoueur);
                 } else if (laCase.plantePresente()) {
-                    ajoutActionCouper(coord, actions, vitalites, laCase);
+                    ajoutActionCouper(coord, actions, vitalites, laCase, plateau);
                 }
             }
         }
@@ -67,6 +67,28 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
             }
         }
         return new Vitalites(vitaliteRouge, vitaliteBleu);
+    }
+
+    /**
+     * Méthode de classe qui renvoie les coordonnées voisines d'une case selon
+     * ses coordonnées.
+     *
+     * @param coord coordonnées de la case considérée
+     * @return un tableau de Coordonnees contenant ses coordonnées voisines
+     */
+    static Coordonnees[] coordonneesVoisines(Coordonnees coord) {
+        Coordonnees[] coordVoisines = new Coordonnees[4];
+        int lig = coord.ligne;
+        int col = coord.colonne;
+        // voisin Nord 
+        coordVoisines[0] = new Coordonnees(lig - 1, col);
+        // voisin Sud 
+        coordVoisines[1] = new Coordonnees(lig + 1, col);
+        // voisin Ouest 
+        coordVoisines[2] = new Coordonnees(lig, col - 1);
+        // voisin Est 
+        coordVoisines[3] = new Coordonnees(lig, col + 1);
+        return coordVoisines;
     }
 
     /**
@@ -107,7 +129,7 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
      * @param laCase la case considérée
      */
     void ajoutActionCouper(Coordonnees coord, ActionsPossibles actions,
-            Vitalites vitalites, Case laCase) {
+            Vitalites vitalites, Case laCase, Case[][] plateau) {
         // on modifie les vitalités 
         int vitalitesRouge = vitalites.vitalitesRouge;
         int vitalitesBleu = vitalites.vitalitesBleu;
@@ -116,10 +138,52 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
         } else if (laCase.couleur == Case.CAR_BLEU) {
             vitalitesBleu -= laCase.vitalite;
         }
+        // on calcule les boosts
+        Vitalites boost = calculBoostVoisins(coord, plateau);
+        vitalitesRouge += boost.vitalitesRouge;
+        vitalitesBleu += boost.vitalitesBleu;
         // ajout de l'action couper
         String action = "C" + coord.carLigne() + coord.carColonne() + ","
                 + (vitalitesRouge) + ","
                 + (vitalitesBleu);
         actions.ajouterAction(action);
+    }
+
+    /**
+     * Méthode de classe qui calcule l'impact du boost de coupe sur les 4
+     * voisins d'une case.
+     *
+     * @param coord coordonnées de la case considérée
+     * @param plateau le plateau considéré
+     * @return un objet Vitalites contenant le total des points de boost à
+     * ajouter à chaque joueur
+     */
+    static Vitalites calculBoostVoisins(Coordonnees coord, Case[][] plateau) {
+        int boostRouge = 0;
+        int boostBleu = 0;
+        Coordonnees[] voisins = coordonneesVoisines(coord);
+        // on parcourt les voisins
+        for (Coordonnees coordVoisin : voisins) {
+            int lig = coordVoisin.ligne;
+            int col = coordVoisin.colonne;
+            // on vérifie que la coordonnée est dans les limites du plateau
+            if (lig >= 0 && lig < Coordonnees.NB_LIGNES
+                    && col >= 0 && col < Coordonnees.NB_COLONNES) {
+                // on vérifie la présence d'une plante
+                Case caseVoisine = plateau[lig][col];
+                if (caseVoisine.plantePresente()) {
+                    int vitaliteActuelle = caseVoisine.vitalite;
+                    // on appplique le boost
+                    if (vitaliteActuelle < 9) {
+                        if (caseVoisine.couleur == Case.CAR_ROUGE) {
+                            boostRouge++;
+                        } else if (caseVoisine.couleur == Case.CAR_BLEU) {
+                            boostBleu++;
+                        }
+                    }
+                }
+            }
+        }
+        return new Vitalites(boostRouge, boostBleu);
     }
 }
