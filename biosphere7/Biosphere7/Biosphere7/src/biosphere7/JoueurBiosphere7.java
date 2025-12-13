@@ -29,7 +29,7 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
         Vitalites vitalites = vitalitesPlateau(plateau);
         // ajout des actions "planter pommier"
         for (int lig = 0; lig < Coordonnees.NB_LIGNES; lig++) {
-            for (int col = 1; col < Coordonnees.NB_COLONNES; col++) {
+            for (int col = 0; col < Coordonnees.NB_COLONNES; col++) {
                 Coordonnees coord = new Coordonnees(lig, col);
                 ajoutActionPlanter(coord, actions, vitalites, couleurJoueur);
             }
