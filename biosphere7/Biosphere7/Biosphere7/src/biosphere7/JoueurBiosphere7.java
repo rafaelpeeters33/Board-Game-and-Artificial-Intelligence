@@ -27,13 +27,15 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
         ActionsPossibles actions = new ActionsPossibles();
         // calculer les vitalités sur le plateau initial
         Vitalites vitalites = vitalitesPlateau(plateau);
-        // ajout des actions "planter pommier"
+        // ajout des actions "planter pommier" et "couper plante"
         for (int lig = 0; lig < Coordonnees.NB_LIGNES; lig++) {
             for (int col = 0; col < Coordonnees.NB_COLONNES; col++) {
                 Coordonnees coord = new Coordonnees(lig, col);
                 Case laCase = plateau[lig][col];
                 if (!laCase.plantePresente()) {
                     ajoutActionPlanter(coord, actions, vitalites, couleurJoueur);
+                } else if (laCase.plantePresente()) {
+                    ajoutActionCouper(coord, actions, vitalites, laCase);
                 }
             }
         }
@@ -89,6 +91,33 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
         }
         // ajout de l'action planter
         String action = "P" + coord.carLigne() + coord.carColonne() + ","
+                + (vitalitesRouge) + ","
+                + (vitalitesBleu);
+        actions.ajouterAction(action);
+    }
+
+    /**
+     * Méthode d'instance qui ajoute une action de coupe de plante dans
+     * l'ensemble des actions possibles.
+     *
+     * @param coord coordonnées de la case où couper la plante
+     * @param actions l'ensemble des actions possibles (en construction)
+     * @param vitalites la somme des vitalités sur le plateau avant de jouer
+     * l'action
+     * @param laCase la case considérée
+     */
+    void ajoutActionCouper(Coordonnees coord, ActionsPossibles actions,
+            Vitalites vitalites, Case laCase) {
+        // on modifie les vitalités 
+        int vitalitesRouge = vitalites.vitalitesRouge;
+        int vitalitesBleu = vitalites.vitalitesBleu;
+        if (laCase.couleur == Case.CAR_ROUGE) {
+            vitalitesRouge -= laCase.vitalite;
+        } else if (laCase.couleur == Case.CAR_BLEU) {
+            vitalitesBleu -= laCase.vitalite;
+        }
+        // ajout de l'action couper
+        String action = "C" + coord.carLigne() + coord.carColonne() + ","
                 + (vitalitesRouge) + ","
                 + (vitalitesBleu);
         actions.ajouterAction(action);
