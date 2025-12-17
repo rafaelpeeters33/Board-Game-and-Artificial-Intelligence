@@ -32,7 +32,7 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
             for (int col = 0; col < Coordonnees.NB_COLONNES; col++) {
                 Coordonnees coord = new Coordonnees(lig, col);
                 Case laCase = plateau[lig][col];
-                if (!laCase.plantePresente()) {
+                if (!laCase.plantePresente() && !estEtouffee(plateau, coord)) {
                     ajoutActionPlanter(coord, actions, vitalites, couleurJoueur, plateau);
                 } else if (laCase.plantePresente()) {
                     ajoutActionCouper(coord, actions, vitalites, laCase, plateau);
@@ -93,7 +93,7 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
 
     /**
      * Méthode d'instance qui ajoute une action de plantation de plante dans
-     * l'ensemble des actions possibles.
+     * l'ensemble des actions possibles, et gère un éventuel étouffement.
      *
      * @param coord coordonnées de la case où planter la plante
      * @param actions l'ensemble des actions possibles (en construction)
@@ -104,14 +104,36 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
      */
     void ajoutActionPlanter(Coordonnees coord, ActionsPossibles actions,
             Vitalites vitalites, char couleur, Case[][] plateau) {
-        int nbVoisins = calculNombreVoisins(coord, couleur, plateau);
-        // on modifie les vitalités
+        int nbVoisinsCouleur = calculNombreVoisins(coord, couleur, plateau);
+        Coordonnees[] voisins = coordonneesVoisines(coord);
+        // on modifie les vitalités (plantation)
         int vitalitesRouge = vitalites.vitalitesRouge;
         int vitalitesBleu = vitalites.vitalitesBleu;
         if (couleur == 'R') {
-            vitalitesRouge += 1 + nbVoisins;
+            vitalitesRouge += 1 + nbVoisinsCouleur;
         } else if (couleur == 'B') {
-            vitalitesBleu += 1 + nbVoisins;
+            vitalitesBleu += 1 + nbVoisinsCouleur;
+        }
+        // on modifie les vitalités (étouffement)
+        for (Coordonnees voisin : voisins) {
+            // on vérifie que la coordonnée est dans les limites du plateau
+            int lig = voisin.ligne;
+            int col = voisin.colonne;
+            if (lig >= 0 && lig < Coordonnees.NB_LIGNES
+                    && col >= 0 && col < Coordonnees.NB_COLONNES) {
+                Case caseVoisine = plateau[voisin.ligne][voisin.colonne];
+                if (caseVoisine.plantePresente()) {
+                    int nbVoisinsDuVoisin = calculNombreVoisins(voisin, 'B', plateau) + calculNombreVoisins(voisin, 'R', plateau);
+                    // si case voisine a 3 voisins, elle passe à 4 et étouffe
+                    if (nbVoisinsDuVoisin == 3) {
+                        if (caseVoisine.couleur == 'R') {
+                            vitalitesRouge -= caseVoisine.vitalite;
+                        } else if (caseVoisine.couleur == 'B') {
+                            vitalitesBleu -= caseVoisine.vitalite;
+                        }
+                    }
+                }
+            }
         }
         // ajout de l'action planter
         String action = "P" + coord.carLigne() + coord.carColonne() + ","
@@ -219,5 +241,18 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
             }
         }
         return nbVoisins;
+    }
+
+    /**
+     * Méthode de classe qui indique si une certaine case est étouffée.
+     *
+     * @param coord coordonnées de la case considérée
+     * @param plateau le plateau considéré
+     * @return
+     */
+    static boolean estEtouffee(Case[][] plateau, Coordonnees coord) {
+        // nombre total de voisins -> total voisins rouge + total voisins bleus
+        int nbVoisinsTotal = calculNombreVoisins(coord, 'B', plateau) + calculNombreVoisins(coord, 'R', plateau);
+        return nbVoisinsTotal == 4;
     }
 }

@@ -20,7 +20,8 @@ public class JoueurBiosphere7Test {
         //testActionsPossibles_niveau3();
         //testActionsPossibles_niveau4();
         //testActionsPossibles_niveau5();
-        testActionsPossibles_niveau6();
+        //testActionsPossibles_niveau6();
+        testActionsPossibles_niveau7();
     }
 
     /**
@@ -203,7 +204,37 @@ public class JoueurBiosphere7Test {
         assertEquals(Coordonnees.NB_LIGNES * Coordonnees.NB_COLONNES,
                 actionsPossiblesDepuisPlateau.length);
     }
-
+    
+    /**
+     * Test de la méthode actionsPossibles, au niveau 7.
+     */
+    public void testActionsPossibles_niveau7() {
+        JoueurBiosphere7 joueur = new JoueurBiosphere7();
+        // plateau, couleur et niveau
+        Case[][] plateau = Utils.plateauDepuisTexte(PLATEAU_NIVEAU7);
+        char couleur = 'B';
+        int niveau = 7;
+        // on lance actionsPossibles
+        String[] actionsPossiblesDepuisPlateau
+                = joueur.actionsPossibles(plateau, couleur, niveau);
+        ActionsPossibles actionsPossibles
+                = new ActionsPossibles(actionsPossiblesDepuisPlateau);
+        // vitalités rouges : 19, vitalités bleues : 17
+        // on peut planter sur une case quelconque vide
+        assertTrue(actionsPossibles.contient("PaB,19,18"));
+        // on ne peut pas planter sur une case occupée 
+        assertFalse(actionsPossibles.contient("PaA,18,17"));
+        // on peut planter en provoquant un étouffement 
+        assertTrue(actionsPossibles.contient("PeE,17,18"));
+        // on ne peut pas planter sur une case qui étoufferait immédiatement 
+        assertFalse(actionsPossibles.contient("PfE,17,18"));
+        // on ne peut pas couper une case vide 
+        assertFalse(actionsPossibles.contient("PeE,18,18"));
+        // vérifions s'il y a le bon nombre d'actions possibles 
+        assertEquals(Coordonnees.NB_LIGNES * Coordonnees.NB_COLONNES,
+                actionsPossiblesDepuisPlateau.length);
+    }
+    
     /**
      * Test de la méthode vitalitesPlateau.
      */
@@ -224,6 +255,10 @@ public class JoueurBiosphere7Test {
         Vitalites vita3 = JoueurBiosphere7.vitalitesPlateau(plateau3);
         assertEquals(4, vita3.vitalitesRouge);
         assertEquals(4, vita3.vitalitesBleu);
+          Case[][] plateau5 = Utils.plateauDepuisTexte(PLATEAU_NIVEAU7);
+        Vitalites vita = JoueurBiosphere7.vitalitesPlateau(plateau5);
+        assertEquals(19, vita.vitalitesRouge);
+        assertEquals(17, vita.vitalitesBleu);
     }
 
     /**
@@ -572,4 +607,38 @@ public class JoueurBiosphere7Test {
              n|   |   |PB1|   |   |   |   |PB1|   |   |   |   |   |   |
               +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
              """;
+    
+    final String PLATEAU_NIVEAU7
+            = """
+                A   B   C   D   E   F   G   H   I   J   K   L   M   N 
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             a|PR1|   |   |PR1|   |   |   |PB1|   |   |   |   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             b|   |PR1|PB1|   |   |   |   |   |   |   |   |   |PR1|   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             c|PB1|   |   |   |   |   |   |   |   |   |   |   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             d|   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             e|   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             f|   |   |   |PR1|PR2|PB1|   |   |   |   |   |   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             g|   |   |   |   |PB1|   |   |   |PR1|   |   |   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             h|   |   |   |   |   |   |   |PB1|   |   |PB1|   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             i|   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             j|   |PB1|   |   |   |   |PR1|   |   |   |   |   |   |PB1|
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             k|PB2|   |PR2|PR1|   |PR2|   |   |   |   |   |   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             l|PB1|   |   |   |   |PR1|   |   |   |PR1|   |   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             m|   |   |PB1|   |   |   |   |   |   |   |   |   |PB1|PB2|
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             n|   |   |   |   |   |PR2|PR1|   |   |   |PB1|   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+              """;
 }
