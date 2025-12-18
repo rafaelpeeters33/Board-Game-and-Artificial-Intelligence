@@ -21,7 +21,8 @@ public class JoueurBiosphere7Test {
         //testActionsPossibles_niveau4();
         //testActionsPossibles_niveau5();
         //testActionsPossibles_niveau6();
-        testActionsPossibles_niveau7();
+        //testActionsPossibles_niveau7();
+        testActionsPossibles_niveau8();
     }
 
     /**
@@ -204,7 +205,7 @@ public class JoueurBiosphere7Test {
         assertEquals(Coordonnees.NB_LIGNES * Coordonnees.NB_COLONNES,
                 actionsPossiblesDepuisPlateau.length);
     }
-    
+
     /**
      * Test de la méthode actionsPossibles, au niveau 7.
      */
@@ -234,7 +235,40 @@ public class JoueurBiosphere7Test {
         assertEquals(Coordonnees.NB_LIGNES * Coordonnees.NB_COLONNES,
                 actionsPossiblesDepuisPlateau.length);
     }
-    
+
+    /**
+     * Test de la méthode actionsPossibles, au niveau 8.
+     */
+    public void testActionsPossibles_niveau8() {
+        JoueurBiosphere7 joueur = new JoueurBiosphere7();
+        // plateau, couleur et niveau
+        Case[][] plateau = Utils.plateauDepuisTexte(PLATEAU_NIVEAU8);
+        char couleur = 'B';
+        int niveau = 8;
+        // on lance actionsPossibles
+        String[] actionsPossiblesDepuisPlateau
+                = joueur.actionsPossibles(plateau, couleur, niveau);
+        ActionsPossibles actionsPossibles
+                = new ActionsPossibles(actionsPossiblesDepuisPlateau);
+        // vitalités rouges : 20, vitalités bleues : 19
+        // on peut planter les 6 espèces sur une case quelconque vide
+        assertTrue(actionsPossibles.contient("PaA,20,20"));
+        assertTrue(actionsPossibles.contient("SaA,20,20"));
+        assertTrue(actionsPossibles.contient("BaA,20,20"));
+        assertTrue(actionsPossibles.contient("DaA,20,20"));
+        assertTrue(actionsPossibles.contient("TaA,20,20"));
+        assertTrue(actionsPossibles.contient("HaA,20,20"));
+        // on ne peut pas planter sur une case occupée
+        assertFalse(actionsPossibles.contient("PaG,20,20"));
+        // on peut fertiliser avec des gains différents selon l'espèce
+        assertTrue(actionsPossibles.contient("FbD,20,22"));
+        assertTrue(actionsPossibles.contient("FdH,21,19"));
+        // on peut couper une plante rouge en jD
+        assertTrue(actionsPossibles.contient("CjD,19,19"));
+        // on ne peut pas couper une case vide
+        assertFalse(actionsPossibles.contient("CaA,20,19"));
+    }
+
     /**
      * Test de la méthode vitalitesPlateau.
      */
@@ -255,10 +289,11 @@ public class JoueurBiosphere7Test {
         Vitalites vita3 = JoueurBiosphere7.vitalitesPlateau(plateau3);
         assertEquals(4, vita3.vitalitesRouge);
         assertEquals(4, vita3.vitalitesBleu);
-          Case[][] plateau5 = Utils.plateauDepuisTexte(PLATEAU_NIVEAU7);
-        Vitalites vita = JoueurBiosphere7.vitalitesPlateau(plateau5);
-        assertEquals(19, vita.vitalitesRouge);
-        assertEquals(17, vita.vitalitesBleu);
+        // plateau 8 : rouge 20 bleu 19
+        Case[][] plateau8 = Utils.plateauDepuisTexte(PLATEAU_NIVEAU8);
+        Vitalites vita8 = JoueurBiosphere7.vitalitesPlateau(plateau8);
+        assertEquals(20, vita8.vitalitesRouge);
+        assertEquals(19, vita8.vitalitesBleu);
     }
 
     /**
@@ -298,7 +333,7 @@ public class JoueurBiosphere7Test {
         assertEquals(0, actions.nbActions);
         // on crée le tableau d'actions et on en ajoute une
         joueur.ajoutActionPlanter(Coordonnees.depuisCars('f', 'D'), actions,
-                vitalites, Case.CAR_ROUGE, plateau);
+                vitalites, Case.CAR_ROUGE, plateau, 'P');
         // l'action est devenue possible
         assertTrue(actions.contient("PfD,1,0"));
         // une action possible mais qui n'a pas encore été ajoutée
@@ -307,7 +342,7 @@ public class JoueurBiosphere7Test {
         assertEquals(1, actions.nbActions);
         // ajout d'une deuxième action possible
         joueur.ajoutActionPlanter(Coordonnees.depuisCars('b', 'H'), actions,
-                vitalites, Case.CAR_ROUGE, plateau);
+                vitalites, Case.CAR_ROUGE, plateau, 'P');
         // l'action a bien été ajoutée
         assertTrue(actions.contient("PbH,1,0"));
         // désormais, deux actions possibles
@@ -341,6 +376,37 @@ public class JoueurBiosphere7Test {
         joueur.ajoutActionCouper(coord2, actions, vitalites, laCase2, plateau);
         // l'action a bien été ajoutée
         assertTrue(actions.contient("CaM,4,3"));
+        // désormais, deux actions possibles
+        assertEquals(2, actions.nbActions);
+    }
+
+    /**
+     * Test de la méthode ajoutActionFertiliser.
+     */
+    @Test
+    public void testAjoutActionFertiliser() {
+        JoueurBiosphere7 joueur = new JoueurBiosphere7();
+        ActionsPossibles actions = new ActionsPossibles();
+        Case[][] plateau = Utils.plateauDepuisTexte(PLATEAU_NIVEAU8);
+        Vitalites vitalites = new Vitalites(15, 22);
+        // pour l'instant pas d'action possible
+        assertEquals(0, actions.nbActions);
+        // on crée le tableau d'actions et on en ajoute une
+        Coordonnees coord1 = Coordonnees.depuisCars('b', 'D');
+        Case laCase1 = plateau[coord1.ligne][coord1.colonne];
+        joueur.ajoutActionFertiliser(coord1, actions, vitalites, laCase1);
+        // l'action est devenue possible
+        assertTrue(actions.contient("FbD,15,25"));
+        // une action possible mais qui n'a pas encore été ajoutée 
+        assertFalse(actions.contient("FdH,16,22"));
+        // pour l'instant une seule action possible
+        assertEquals(1, actions.nbActions);
+        // ajout d'une deuxième action possible
+        Coordonnees coord2 = Coordonnees.depuisCars('d', 'H');
+        Case laCase2 = plateau[coord2.ligne][coord2.colonne];
+        joueur.ajoutActionFertiliser(coord2, actions, vitalites, laCase2);
+        // l'action a bien été ajoutée
+        assertTrue(actions.contient("FdH,16,22"));
         // désormais, deux actions possibles
         assertEquals(2, actions.nbActions);
     }
@@ -387,6 +453,44 @@ public class JoueurBiosphere7Test {
         Coordonnees coordPlante = Coordonnees.depuisCars('b', 'H');
         int voisinsPlante = JoueurBiosphere7.calculNombreVoisins(coordPlante, couleurRouge, plateau);
         assertEquals(1, voisinsPlante);
+    }
+
+    /**
+     * Test de la méthode estEtouffee.
+     */
+    @Test
+    public void testEstEtouffee() {
+        Case[][] plateau = Utils.plateauDepuisTexte(PLATEAU_NIVEAU7);
+        // cas 1 : 4 voisins sur le plateau (dont un ajouté virtuellement en lB)
+        Case planteVirtuelle = Utils.caseDepuisCodage("---", "PR1");
+        plateau[11][1] = planteVirtuelle;
+        Coordonnees etouffee = Coordonnees.depuisCars('k', 'B');
+        assertTrue(JoueurBiosphere7.estEtouffee(plateau, etouffee));
+        // cas 2 : case vide sans voisins 
+        Coordonnees pasDeVoisins = Coordonnees.depuisCars('d', 'J');
+        assertFalse(JoueurBiosphere7.estEtouffee(plateau, pasDeVoisins));
+        // cas 3 : Une case avec seulement 2 voisins 
+        Coordonnees peuVoisins = Coordonnees.depuisCars('j', 'I');
+        assertFalse(JoueurBiosphere7.estEtouffee(plateau, peuVoisins));
+    }
+
+    /**
+     * Test de la méthode gainFertilisant.
+     */
+    @Test
+    public void testGainFertilisant() {
+        // cas 1 : les arbres
+        assertEquals(1, JoueurBiosphere7.gainFertilisant('P'));
+        assertEquals(1, JoueurBiosphere7.gainFertilisant('S'));
+        // cas 2 : l'arbuste
+        assertEquals(2, JoueurBiosphere7.gainFertilisant('B'));
+        // cas 3 : les légumes 
+        assertEquals(3, JoueurBiosphere7.gainFertilisant('D'));
+        assertEquals(3, JoueurBiosphere7.gainFertilisant('T'));
+        assertEquals(3, JoueurBiosphere7.gainFertilisant('H'));
+        // cas 4 : espèce inconnue / case vide
+        assertEquals(0, JoueurBiosphere7.gainFertilisant('Y'));
+        assertEquals(0, JoueurBiosphere7.gainFertilisant(' '));
     }
 
     /**
@@ -607,7 +711,7 @@ public class JoueurBiosphere7Test {
              n|   |   |PB1|   |   |   |   |PB1|   |   |   |   |   |   |
               +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
              """;
-    
+
     final String PLATEAU_NIVEAU7
             = """
                 A   B   C   D   E   F   G   H   I   J   K   L   M   N 
@@ -639,6 +743,40 @@ public class JoueurBiosphere7Test {
              m|   |   |PB1|   |   |   |   |   |   |   |   |   |PB1|PB2|
               +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
              n|   |   |   |   |   |PR2|PR1|   |   |   |PB1|   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+              """;
+
+    final String PLATEAU_NIVEAU8
+            = """
+                A   B   C   D   E   F   G   H   I   J   K   L   M   N 
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             a|   |   |   |   |   |   |PB1|   |   |   |   |DB1|BR2|DR1|
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             b|   |   |   |TB1|   |   |   |   |   |   |   |PR1|DB1|   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             c|   |   |   |   |   |   |   |   |   |   |   |   |HR1|   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             d|   |   |   |   |   |DB1|   |SR1|   |   |   |   |   |SR1|
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             e|   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             f|   |   |   |   |HB1|   |   |   |   |HB1|BR1|   |   |PB1|
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             g|   |   |   |TB1|   |   |   |   |   |   |SR2|   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             h|   |   |SR1|   |   |   |   |   |BR1|   |   |   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             i|TB1|   |   |   |BR1|   |   |   |   |   |BB1|   |   |DR1|
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             j|   |   |   |PR1|   |   |   |   |   |   |   |   |   |BB1|
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             k|   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             l|   |PB1|TB2|   |   |   |   |HR1|   |BR1|   |   |   |HR1|
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             m|HR1|   |   |   |   |TB1|   |   |   |   |   |   |   |   |
+              +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+             n|   |BB1|   |DB1|   |SR1|HB1|   |   |   |   |   |   |   |
               +---+---+---+---+---+---+---+---+---+---+---+---+---+---+
               """;
 }

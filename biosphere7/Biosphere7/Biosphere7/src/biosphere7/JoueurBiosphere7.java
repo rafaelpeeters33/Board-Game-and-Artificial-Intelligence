@@ -27,15 +27,20 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
         ActionsPossibles actions = new ActionsPossibles();
         // calculer les vitalités sur le plateau initial
         Vitalites vitalites = vitalitesPlateau(plateau);
-        // ajout des actions "planter pommier" et "couper plante"
+        // initialisation des espèces de plantes
+        char[] especes = {'P', 'S', 'B', 'D', 'T', 'H'};
+        // ajout des actions "planter plante", "couper plante" et "fertiliser plante"
         for (int lig = 0; lig < Coordonnees.NB_LIGNES; lig++) {
             for (int col = 0; col < Coordonnees.NB_COLONNES; col++) {
                 Coordonnees coord = new Coordonnees(lig, col);
                 Case laCase = plateau[lig][col];
                 if (!laCase.plantePresente() && !estEtouffee(plateau, coord)) {
-                    ajoutActionPlanter(coord, actions, vitalites, couleurJoueur, plateau);
+                    for (char espece : especes) {
+                        ajoutActionPlanter(coord, actions, vitalites, couleurJoueur, plateau, espece);
+                    }
                 } else if (laCase.plantePresente()) {
                     ajoutActionCouper(coord, actions, vitalites, laCase, plateau);
+                    ajoutActionFertiliser(coord, actions, vitalites, laCase);
                 }
             }
         }
@@ -101,9 +106,10 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
      * l'action
      * @param couleur la couleur du pommier à ajouter
      * @param plateau le plateau considéré
+     * @param espece l'espèce de plante considérée
      */
     void ajoutActionPlanter(Coordonnees coord, ActionsPossibles actions,
-            Vitalites vitalites, char couleur, Case[][] plateau) {
+            Vitalites vitalites, char couleur, Case[][] plateau, char espece) {
         int nbVoisinsCouleur = calculNombreVoisins(coord, couleur, plateau);
         Coordonnees[] voisins = coordonneesVoisines(coord);
         // on modifie les vitalités (plantation)
@@ -136,17 +142,17 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
             }
         }
         // ajout de l'action planter
-        String action = "P" + coord.carLigne() + coord.carColonne() + ","
+        String action = "" + espece + coord.carLigne() + coord.carColonne() + ","
                 + (vitalitesRouge) + ","
                 + (vitalitesBleu);
         actions.ajouterAction(action);
     }
 
     /**
-     * Méthode d'instance qui ajoute une action de coupe de plante dans
+     * Méthode d'instance qui ajoute une action de fertilisation de plante dans
      * l'ensemble des actions possibles.
      *
-     * @param coord coordonnées de la case où couper la plante
+     * @param coord coordonnées de la case où fertiliser la plante
      * @param actions l'ensemble des actions possibles (en construction)
      * @param vitalites la somme des vitalités sur le plateau avant de jouer
      * l'action
@@ -169,6 +175,28 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
         vitalitesBleu += boost.vitalitesBleu;
         // ajout de l'action couper
         String action = "C" + coord.carLigne() + coord.carColonne() + ","
+                + (vitalitesRouge) + ","
+                + (vitalitesBleu);
+        actions.ajouterAction(action);
+    }
+
+    void ajoutActionFertiliser(Coordonnees coord, ActionsPossibles actions,
+            Vitalites vitalites, Case laCase) {
+        // on modifie les vitalités
+        int vitalitesRouge = vitalites.vitalitesRouge;
+        int vitalitesBleu = vitalites.vitalitesBleu;
+        int vitaliteApres = laCase.vitalite + gainFertilisant(laCase.espece);
+        if (vitaliteApres > 9) { // (on plafonne à 9)
+            vitaliteApres = 9;
+        }
+        int gainFertiliser = vitaliteApres - laCase.vitalite;
+        if (laCase.couleur == 'R') {
+            vitalitesRouge += gainFertiliser;
+        } else if (laCase.couleur == 'B') {
+            vitalitesBleu += gainFertiliser;
+        }
+        // ajout de l'action fertiliser
+        String action = "F" + coord.carLigne() + coord.carColonne() + ","
                 + (vitalitesRouge) + ","
                 + (vitalitesBleu);
         actions.ajouterAction(action);
@@ -248,11 +276,32 @@ public class JoueurBiosphere7 implements IJoueurBiosphere7 {
      *
      * @param coord coordonnées de la case considérée
      * @param plateau le plateau considéré
-     * @return
+     * @return un booléen indiquant si la case est étouffée
      */
     static boolean estEtouffee(Case[][] plateau, Coordonnees coord) {
         // nombre total de voisins -> total voisins rouge + total voisins bleus
         int nbVoisinsTotal = calculNombreVoisins(coord, 'B', plateau) + calculNombreVoisins(coord, 'R', plateau);
         return nbVoisinsTotal == 4;
+    }
+
+    /**
+     * Méthode de classe qui renvoie le gain de fertilisation selon l'espèce.
+     * @param espece l'espèce de la plante concernée
+     * @return son gain de fertilisation
+     */
+    static int gainFertilisant(char espece) {
+        return switch (espece) {
+            // arbres
+            case 'P', 'S' ->
+                1;
+            // arbustes
+            case 'B' ->
+                2;
+            // légumes
+            case 'D', 'T', 'H' ->
+                3;
+            default ->
+                0;
+        };
     }
 }
